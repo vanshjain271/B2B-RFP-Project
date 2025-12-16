@@ -1,35 +1,37 @@
-import express, { type Express } from "express";
-import fs from "fs";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import path from "path";
-import { fileURLToPath } from "url";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-// ESM-safe __dirname replacement
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export default defineConfig(async () => {
+  const plugins = [react(), runtimeErrorOverlay()];
 
-export function serveStatic(app: Express) {
-  // Vite build output - matches vite.config.ts outDir
-  const distPath = path.resolve(process.cwd(), "dist/public");
-
-  console.log("Looking for dist at:", distPath);
-  console.log("Dist exists:", fs.existsSync(distPath));
-
-  if (!fs.existsSync(distPath)) {
-    // List what's actually in the project root for debugging
-    console.log("Project root contents:", fs.readdirSync(process.cwd()));
-    if (fs.existsSync(path.resolve(process.cwd(), "dist"))) {
-      console.log("Dist folder contents:", fs.readdirSync(path.resolve(process.cwd(), "dist")));
-    }
-    throw new Error(
-      `Could not find the build directory: ${distPath}. Make sure the client is built.`,
-    );
+  // Only load Replit plugins in development
+  if (process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined) {
+    const { cartographer } = await import("@replit/vite-plugin-cartographer");
+    const { devBanner } = await import("@replit/vite-plugin-dev-banner");
+    plugins.push(cartographer(), devBanner());
   }
 
-  // Serve static assets
-  app.use(express.static(distPath));
-
-  // SPA fallback (React router, etc.)
-  app.use("*", (_req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-}
+  return {
+    plugins,
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "shared"),
+        "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      },
+    },
+    root: path.resolve(import.meta.dirname, "client"),
+    build: {
+      outDir: path.resolve(import.meta.dirname, "dist/public"),
+      emptyOutDir: true,
+    },
+    server: {
+      fs: {
+        strict: true,
+        deny: ["**/.*"],
+      },
+    },
+  };
+});
