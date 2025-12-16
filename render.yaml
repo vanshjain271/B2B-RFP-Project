@@ -6,9 +6,12 @@ services:
     region: oregon
 
     buildCommand: |
-      NODE_ENV=development npm install
+      npm install --include=dev
       npm run build
+      echo "Build completed. Checking directories:"
+      ls -la
       ls -la dist
+      ls -la dist/public
 
     startCommand: npm start
 

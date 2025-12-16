@@ -8,10 +8,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function serveStatic(app: Express) {
-  // Vite build output
-  const distPath = path.resolve(__dirname, "../dist");
+  // Vite build output - go up one level from server directory to project root
+  const distPath = path.resolve(process.cwd(), "dist");
+
+  console.log("Looking for dist at:", distPath);
+  console.log("Dist exists:", fs.existsSync(distPath));
 
   if (!fs.existsSync(distPath)) {
+    // List what's actually in the project root for debugging
+    console.log("Project root contents:", fs.readdirSync(process.cwd()));
     throw new Error(
       `Could not find the build directory: ${distPath}. Make sure the client is built.`,
     );
