@@ -6,7 +6,7 @@ services:
     region: oregon
 
     buildCommand: |
-      npm install
+      NODE_ENV=development npm install
       npm run build
       ls -la dist
 
