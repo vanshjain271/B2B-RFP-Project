@@ -8,19 +8,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function serveStatic(app: Express) {
-  // Vite build output - go up one level from server directory to project root
-  const distPath = path.resolve(process.cwd(), "dist");
+  // Vite build output - matches vite.config.ts outDir: dist/public
+  const distPath = path.resolve(process.cwd(), "dist", "public");
 
   console.log("Looking for dist at:", distPath);
   console.log("Dist exists:", fs.existsSync(distPath));
 
+  if (fs.existsSync(path.resolve(process.cwd(), "dist"))) {
+    console.log("Contents of dist:", fs.readdirSync(path.resolve(process.cwd(), "dist")));
+  }
+
   if (!fs.existsSync(distPath)) {
-    // List what's actually in the project root for debugging
-    console.log("Project root contents:", fs.readdirSync(process.cwd()));
     throw new Error(
       `Could not find the build directory: ${distPath}. Make sure the client is built.`,
     );
   }
+
+  console.log("Contents of dist/public:", fs.readdirSync(distPath));
 
   // Serve static assets
   app.use(express.static(distPath));
