@@ -6,6 +6,13 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+// Increase timeout to 5 minutes
+app.use((req, res, next) => {
+  req.setTimeout(300000); // 5 minutes
+  res.setTimeout(300000); // 5 minutes
+  next();
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
